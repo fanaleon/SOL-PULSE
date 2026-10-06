@@ -1,4 +1,4 @@
-package app.solpulse
+package app.pumpviewer
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -31,13 +31,13 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import app.solpulse.data.Repo
-import app.solpulse.service.ServiceController
-import app.solpulse.ui.AppBackground
-import app.solpulse.ui.DetailScreen
-import app.solpulse.ui.HomeScreen
-import app.solpulse.ui.MainViewModel
-import app.solpulse.ui.SolPulseTheme
+import app.pumpviewer.data.Repo
+import app.pumpviewer.service.ServiceController
+import app.pumpviewer.ui.AppBackground
+import app.pumpviewer.ui.DetailScreen
+import app.pumpviewer.ui.HomeScreen
+import app.pumpviewer.ui.MainViewModel
+import app.pumpviewer.ui.PumpViewerTheme
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT)
         )
         setContent {
-            SolPulseTheme {
+            PumpViewerTheme {
                 AppRoot()
             }
         }

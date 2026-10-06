@@ -1,9 +1,10 @@
-package app.solpulse.data
+package app.pumpviewer.data
 
 import android.content.Context
 import androidx.glance.appwidget.updateAll
-import app.solpulse.service.Notifier
-import app.solpulse.widget.TokenWidget
+import app.pumpviewer.service.Notifier
+import app.pumpviewer.widget.TokenStripWidget
+import app.pumpviewer.widget.TokenWidget
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -30,6 +31,7 @@ object PriceChecker {
             evaluateAlerts(ctx)
             try {
                 TokenWidget().updateAll(ctx)
+                TokenStripWidget().updateAll(ctx)
             } catch (e: Exception) {
                 // el widget es opcional
             }

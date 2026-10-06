@@ -1,13 +1,13 @@
-package app.solpulse.ui
+package app.pumpviewer.ui
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import app.solpulse.data.AlertType
-import app.solpulse.data.DexApi
-import app.solpulse.data.PriceChecker
-import app.solpulse.data.Repo
-import app.solpulse.data.Token
+import app.pumpviewer.data.AlertType
+import app.pumpviewer.data.DexApi
+import app.pumpviewer.data.PriceChecker
+import app.pumpviewer.data.Repo
+import app.pumpviewer.data.Token
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

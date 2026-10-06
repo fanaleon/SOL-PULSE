@@ -4,20 +4,45 @@ plugins {
 }
 
 android {
-    namespace = "app.solpulse"
+    namespace = "app.pumpviewer"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "app.solpulse"
+        applicationId = "app.pumpviewer"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0"
+    }
+
+    // Firma fija para las builds de prueba: así cada APK nuevo se instala encima del anterior
+    // sin tener que desinstalar (y sin perder los tokens ni las alertas).
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
+        }
+    }
+
+    // Las pruebas dibujan las pantallas y el widget a imágenes (ver src/test).
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.systemProperty("roborazzi.test.record", "true")
+                it.maxHeapSize = "2g"
+            }
         }
     }
 
@@ -59,4 +84,11 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    // Solo para las capturas de control que se generan en el build.
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.robolectric:robolectric:4.13")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.26.0")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.26.0")
+    testImplementation("androidx.test:core:1.6.1")
 }

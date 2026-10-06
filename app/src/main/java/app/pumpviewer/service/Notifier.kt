@@ -1,4 +1,4 @@
-package app.solpulse.service
+package app.pumpviewer.service
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -13,12 +13,12 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import app.solpulse.MainActivity
-import app.solpulse.R
-import app.solpulse.data.AlertType
-import app.solpulse.data.Fmt
-import app.solpulse.data.PriceAlert
-import app.solpulse.data.Token
+import app.pumpviewer.MainActivity
+import app.pumpviewer.R
+import app.pumpviewer.data.AlertType
+import app.pumpviewer.data.Fmt
+import app.pumpviewer.data.PriceAlert
+import app.pumpviewer.data.Token
 
 object Notifier {
     const val CH_ALERTS = "alerts"
@@ -58,7 +58,7 @@ object Notifier {
     fun serviceNotification(ctx: Context): Notification =
         NotificationCompat.Builder(ctx, CH_SERVICE)
             .setSmallIcon(R.drawable.ic_stat)
-            .setContentTitle("SolPulse activo")
+            .setContentTitle("Pump Viewer activo")
             .setContentText("Vigilando tus tokens")
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -92,7 +92,7 @@ object Notifier {
         if (!canNotify(ctx)) return
         val n = NotificationCompat.Builder(ctx, CH_ALERTS)
             .setSmallIcon(R.drawable.ic_stat)
-            .setContentTitle("▲ SolPulse: prueba de alerta")
+            .setContentTitle("▲ Pump Viewer: prueba de alerta")
             .setContentText("Si lo ves en el reloj, todo está bien configurado")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setDefaults(NotificationCompat.DEFAULT_ALL)

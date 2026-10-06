@@ -1,4 +1,4 @@
-package app.solpulse.data
+package app.pumpviewer.data
 
 data class Token(
     val mint: String,

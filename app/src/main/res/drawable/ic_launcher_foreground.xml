@@ -1,14 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Ícono: una línea de precio que sube, con degradé verde-cian-violeta y el punto del último precio. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#00000000"
-        android:pathData="M26,56 L40,56 L47,36 L58,74 L66,52 L82,52"
-        android:strokeColor="#14F195"
+        android:pathData="M30,68 L42,58 L50,64 L62,44 L70,50 L78,36"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:strokeWidth="6" />
+        android:strokeWidth="6.5">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:endX="78"
+                android:endY="36"
+                android:startX="30"
+                android:startY="68"
+                android:type="linear">
+                <item android:color="#FFA77BFF" android:offset="0" />
+                <item android:color="#FF3FD8FF" android:offset="0.5" />
+                <item android:color="#FF2DF0A6" android:offset="1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:fillColor="#332DF0A6"
+        android:pathData="M78,36m-9,0a9,9 0,1 1,18 0a9,9 0,1 1,-18 0" />
+    <path
+        android:fillColor="#FF2DF0A6"
+        android:pathData="M78,36m-4.5,0a4.5,4.5 0,1 1,9 0a4.5,4.5 0,1 1,-9 0" />
 </vector>

@@ -40,14 +40,50 @@ jobs:
             echo "::error title=Motivo del fallo::$(grep -A 12 'What went wrong' build.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
           fi
 
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk PumpViewer.apk
+
       - uses: actions/upload-artifact@v4
         with:
-          name: SolPulse-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: PumpViewer-apk
+          path: PumpViewer.apk
 
       - name: Publish APK in a Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: SolPulse build ${{ github.run_number }}
-          files: app/build/outputs/apk/debug/app-debug.apk
+          name: Pump Viewer build ${{ github.run_number }}
+          files: PumpViewer.apk
+
+      # Capturas de control: dibuja las pantallas y el widget sin teléfono, para revisar cómo quedan.
+      # Si esto falla el APK ya está publicado igual.
+      - name: Render screenshots
+        id: shots
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          gradle testDebugUnitTest --no-daemon 2>&1 | tee test.log
+
+      - name: Collect screenshots
+        if: always()
+        run: |
+          mkdir -p capturas
+          cp app/build/capturas/*.png capturas/ 2>/dev/null || true
+          {
+            echo "resultado del paso de capturas: ${{ steps.shots.outcome }}"
+            grep -E "^e: |FAILED|Exception|Error:|Caused by|What went wrong" -A 3 test.log 2>/dev/null | head -n 200
+            for f in app/build/test-results/testDebugUnitTest/*.xml; do
+              [ -f "$f" ] && grep -E "<testcase|<failure|<error" -A 6 "$f" | head -n 150
+            done
+          } > capturas/registro.txt 2>&1 || true
+          ls -la capturas
+
+      - name: Publish screenshots
+        if: always()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: capturas-${{ github.run_number }}
+          name: Capturas de control ${{ github.run_number }}
+          prerelease: true
+          body: Imágenes generadas en el build para revisar las pantallas y el widget. No hace falta instalar nada de acá.
+          files: capturas/*
