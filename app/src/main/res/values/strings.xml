@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">SolPulse</string>
+    <string name="widget_description">Precios de tus tokens de Solana</string>
+</resources>
