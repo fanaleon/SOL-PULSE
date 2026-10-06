@@ -54,9 +54,10 @@ import kotlin.math.sin
  * No prueba lógica: dibuja las pantallas y el widget a imágenes (app/build/capturas) para poder
  * revisar a ojo cómo quedan los colores y la distribución sin tener un teléfono a mano.
  */
+// Se usa una Application vacía: la de la app arranca WorkManager y el servicio, que acá no hacen falta.
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34], qualifiers = "w393dp-h873dp-xxhdpi")
+@Config(sdk = [34], application = Application::class, qualifiers = "w393dp-h873dp-xxhdpi")
 class Capturas {
 
     private val app: Application get() = ApplicationProvider.getApplicationContext()
@@ -172,7 +173,7 @@ class Capturas {
     }
 
     @Test
-    @Config(sdk = [34], qualifiers = "w393dp-h1500dp-xxhdpi")
+    @Config(sdk = [34], application = Application::class, qualifiers = "w393dp-h1500dp-xxhdpi")
     fun b1_detalle() {
         val t = seedOne()
         Repo.setAlertEnabled(Repo.alerts.value.first().id, false)
@@ -181,7 +182,7 @@ class Capturas {
     }
 
     @Test
-    @Config(sdk = [34], qualifiers = "w393dp-h1100dp-xxhdpi")
+    @Config(sdk = [34], application = Application::class, qualifiers = "w393dp-h1100dp-xxhdpi")
     fun b2_hojas() {
         val vm = MainViewModel(app)
         screen("05-agregar-y-ajustes") {
