@@ -1,4 +1,4 @@
-package app.solpulse.data
+package app.pumpviewer.data
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

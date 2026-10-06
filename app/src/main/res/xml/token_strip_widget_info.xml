@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Lista de tokens. Entra en 4x2 y se puede agrandar o achicar hasta 4x1 (ahí pasa a ser una tira). -->
+<!-- Tira de una fila: entra directo en 4x1. Si se agranda, muestra la lista. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:description="@string/widget_description"
+    android:description="@string/widget_strip_description"
     android:initialLayout="@layout/glance_default_loading_layout"
     android:minWidth="250dp"
-    android:minHeight="110dp"
+    android:minHeight="40dp"
     android:minResizeWidth="110dp"
     android:minResizeHeight="40dp"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="4"
-    android:targetCellHeight="2"
+    android:targetCellHeight="1"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen" />

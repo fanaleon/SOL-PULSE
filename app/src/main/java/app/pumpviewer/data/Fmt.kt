@@ -1,4 +1,4 @@
-package app.solpulse.data
+package app.pumpviewer.data
 
 import java.math.BigDecimal
 import java.math.MathContext

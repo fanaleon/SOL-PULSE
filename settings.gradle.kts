@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "SolPulse"
+rootProject.name = "PumpViewer"
 include(":app")

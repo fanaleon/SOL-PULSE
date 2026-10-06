@@ -1,4 +1,4 @@
-package app.solpulse.data
+package app.pumpviewer.data
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -37,7 +37,7 @@ object Repo {
         if (ready) return
         synchronized(lock) {
             if (ready) return
-            prefs = context.applicationContext.getSharedPreferences("solpulse", Context.MODE_PRIVATE)
+            prefs = context.applicationContext.getSharedPreferences("pumpviewer", Context.MODE_PRIVATE)
             _tokens.value = readTokens(prefs.getString("tokens", null))
             _alerts.value = readAlerts(prefs.getString("alerts", null))
             _intervalSec.value = prefs.getInt("interval", 30)

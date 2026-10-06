@@ -1,12 +1,12 @@
-package app.solpulse.service
+package app.pumpviewer.service
 
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.IBinder
 import androidx.core.content.ContextCompat
-import app.solpulse.data.PriceChecker
-import app.solpulse.data.Repo
+import app.pumpviewer.data.PriceChecker
+import app.pumpviewer.data.Repo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

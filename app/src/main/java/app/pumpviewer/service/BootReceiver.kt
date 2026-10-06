@@ -1,4 +1,4 @@
-package app.solpulse.service
+package app.pumpviewer.service
 
 import android.content.BroadcastReceiver
 import android.content.Context

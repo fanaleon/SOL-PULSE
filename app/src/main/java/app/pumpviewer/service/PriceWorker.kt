@@ -1,9 +1,9 @@
-package app.solpulse.service
+package app.pumpviewer.service
 
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import app.solpulse.data.PriceChecker
+import app.pumpviewer.data.PriceChecker
 
 class PriceWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {

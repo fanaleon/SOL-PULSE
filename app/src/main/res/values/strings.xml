@@ -1,4 +1,7 @@
 <resources>
-    <string name="app_name">SolPulse</string>
-    <string name="widget_description">Precios de tus tokens de Solana</string>
+    <string name="app_name">Pump Viewer</string>
+    <string name="widget_list_label">Pump Viewer: lista</string>
+    <string name="widget_strip_label">Pump Viewer: tira 4x1</string>
+    <string name="widget_description">Tus tokens con precio, variación y mini gráfico. Se puede achicar hasta 4x1.</string>
+    <string name="widget_strip_description">Una sola fila con precio, variación y mini gráfico.</string>
 </resources>
