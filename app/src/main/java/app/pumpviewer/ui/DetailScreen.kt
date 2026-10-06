@@ -216,7 +216,7 @@ fun DetailScreen(vm: MainViewModel, mint: String, onBack: () -> Unit) {
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = TextMain),
                 border = BorderStroke(1.dp, Border),
                 modifier = Modifier.weight(1f)
-            ) { Text("Copiar " + Fmt.shortMint(token.mint), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            ) { Text("Copiar contrato", maxLines = 1, overflow = TextOverflow.Ellipsis) }
             OutlinedButton(
                 onClick = {
                     val url = token.pairUrl ?: "https://dexscreener.com/solana/${token.mint}"
@@ -225,7 +225,7 @@ fun DetailScreen(vm: MainViewModel, mint: String, onBack: () -> Unit) {
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = TextMain),
                 border = BorderStroke(1.dp, Border),
                 modifier = Modifier.weight(1f)
-            ) { Text("Ver en DexScreener", maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            ) { Text("DexScreener", maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
     }
 
@@ -519,7 +519,11 @@ private fun AlertRow(
                     maxLines = 1
                 )
                 Text(
-                    if (alert.enabled) "Falta ${Fmt.pct(diff)} desde el precio de ahora" else "En pausa: ya avisó o la apagaste",
+                    when {
+                        !alert.enabled -> "En pausa"
+                        up == (diff >= 0) -> (if (up) "Le falta subir " else "Le falta bajar ") + Fmt.pctAbs(diff)
+                        else -> "Ya se cumple"
+                    },
                     color = TextDim,
                     fontSize = 13.sp,
                     maxLines = 1,
@@ -610,6 +614,7 @@ internal fun NewAlertDialog(
                     label = { Text("Precio objetivo en dólares") },
                     singleLine = true,
                     colors = fieldColors(),
+                    modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {

@@ -55,6 +55,7 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.min
+import kotlin.math.sqrt
 
 // Los mismos colores que la app (Theme.kt).
 private val WGreen = Color(0xFF2DF0A6)
@@ -66,6 +67,16 @@ private val WBrand = Color(0xFF3FD8FF)
 
 /** Debajo de esta altura el widget es una sola fila (4x1) y muestra la tira; si es más alto, la lista. */
 private val STRIP_BELOW = 100.dp
+
+/** Alto mínimo de una fila de la lista y alto del renglón "y N más en la app". */
+private const val ROW_MIN = 30f
+private const val MORE_LINE = 16f
+
+/** Tope de filas: un contenedor de widget admite hasta 10 elementos (título, separación, filas y "y N más"). */
+private const val ROWS_MAX = 7
+
+/** Tope de píxeles de un mini gráfico (unos 600 KB en memoria). */
+private const val SPARK_MAX_PIXELS = 150_000f
 
 /** Widget en lista (4x2 al agregarlo). Se adapta al tamaño: achicado a una fila pasa a ser la tira. */
 class TokenWidget : GlanceAppWidget() {
@@ -205,12 +216,9 @@ private fun StripMany(tokens: List<Token>, size: DpSize) {
     }
 }
 
-/** Widget alto: encabezado con la hora de la última actualización y una fila por token. */
+/** Widget alto: encabezado con la hora de la última actualización y, debajo, los tokens. */
 @Composable
 private fun ListWidget(tokens: List<Token>, size: DpSize) {
-    val rows = ((size.height.value - 52f) / 34f).toInt().coerceIn(1, 8)
-    val shown = tokens.take(rows)
-    val withChart = size.width >= 260.dp
     Column(modifier = GlanceModifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 12.dp)) {
         Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -227,60 +235,106 @@ private fun ListWidget(tokens: List<Token>, size: DpSize) {
             }
         }
         Spacer(GlanceModifier.height(6.dp))
-        shown.forEach { t ->
-            val accent = if (t.change24h >= 0) WGreen else WRed
-            Row(
-                modifier = GlanceModifier.fillMaxWidth().height(34.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(GlanceModifier.width(4.dp).height(22.dp).background(accent).cornerRadius(2.dp)) {}
-                Spacer(GlanceModifier.width(9.dp))
-                Text(
-                    t.symbol.take(10),
-                    modifier = GlanceModifier.defaultWeight(),
-                    maxLines = 1,
-                    style = TextStyle(color = ColorProvider(WWhite), fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                )
-                if (withChart) {
-                    Spark(t.history, accent, 54.dp, 22.dp)
-                    Spacer(GlanceModifier.width(10.dp))
-                }
-                Text(
-                    Fmt.price(t.priceUsd),
-                    maxLines = 1,
-                    style = TextStyle(
-                        color = ColorProvider(WWhite),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.End
-                    )
-                )
-                Spacer(GlanceModifier.width(8.dp))
-                ChangePill(t.change24h)
-            }
-        }
-        if (tokens.size > shown.size) {
-            Text(
-                "y ${tokens.size - shown.size} más en la app",
-                style = TextStyle(color = ColorProvider(WDim), fontSize = 11.sp)
-            )
-        }
+        // Lo que queda libre debajo del encabezado (márgenes 24 + título 20 + separación 6).
+        val free = size.height.value - 50f
+        if (tokens.size == 1) HeroToken(tokens[0], size.width - 28.dp, free) else TokenRows(tokens, size.width, free)
     }
 }
 
+/** Un solo token en el widget alto: nombre, precio y variación arriba, y el gráfico ocupando todo lo demás. */
+@Composable
+private fun HeroToken(t: Token, width: Dp, free: Float) {
+    val accent = if (t.change24h >= 0) WGreen else WRed
+    Row(modifier = GlanceModifier.fillMaxWidth().height(30.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            t.symbol.take(10),
+            modifier = GlanceModifier.defaultWeight(),
+            maxLines = 1,
+            style = TextStyle(color = ColorProvider(WWhite), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        )
+        Text(
+            Fmt.price(t.priceUsd),
+            maxLines = 1,
+            style = TextStyle(color = ColorProvider(WWhite), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        )
+        Spacer(GlanceModifier.width(8.dp))
+        ChangePill(t.change24h)
+    }
+    val chart = free - 36f
+    if (chart >= 24f) {
+        Spacer(GlanceModifier.height(6.dp))
+        Spark(t.history, accent, width, chart.dp)
+    }
+}
+
+/** Varios tokens: una fila por token. Las filas se estiran para ocupar el alto que haya. */
+@Composable
+private fun TokenRows(tokens: List<Token>, width: Dp, free: Float) {
+    val fits = (free / ROW_MIN).toInt().coerceIn(1, ROWS_MAX)
+    val rows = if (tokens.size > fits) ((free - MORE_LINE) / ROW_MIN).toInt().coerceIn(1, ROWS_MAX) else fits
+    val shown = tokens.take(rows)
+    val more = tokens.size - shown.size
+    val rowHeight = ((free - if (more > 0) MORE_LINE else 0f) / shown.size).coerceIn(ROW_MIN, 46f)
+    val withChart = width >= 260.dp
+    shown.forEach { t ->
+        val up = t.change24h >= 0
+        Row(
+            modifier = GlanceModifier.fillMaxWidth().height(rowHeight.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                GlanceModifier
+                    .width(4.dp)
+                    .height((rowHeight - 12f).dp)
+                    .background(ImageProvider(if (up) R.drawable.bar_up else R.drawable.bar_down), colorFilter = null)
+            ) {}
+            Spacer(GlanceModifier.width(9.dp))
+            Text(
+                t.symbol.take(10),
+                modifier = GlanceModifier.defaultWeight(),
+                maxLines = 1,
+                style = TextStyle(color = ColorProvider(WWhite), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            )
+            if (withChart) {
+                Spark(t.history, if (up) WGreen else WRed, 54.dp, (rowHeight - 10f).coerceAtMost(30f).dp)
+                Spacer(GlanceModifier.width(10.dp))
+            }
+            Text(
+                Fmt.price(t.priceUsd),
+                maxLines = 1,
+                style = TextStyle(
+                    color = ColorProvider(WWhite),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.End
+                )
+            )
+            Spacer(GlanceModifier.width(8.dp))
+            ChangePill(t.change24h)
+        }
+    }
+    if (more > 0) {
+        Text(
+            if (more == 1) "y 1 más en la app" else "y $more más en la app",
+            maxLines = 1,
+            style = TextStyle(color = ColorProvider(WDim), fontSize = 11.sp)
+        )
+    }
+}
+
+/** Etiqueta de variación. El fondo es un dibujo con las puntas redondeadas: se ve igual en cualquier Android. */
 @Composable
 private fun ChangePill(pct: Double) {
-    val c = if (pct >= 0) WGreen else WRed
+    val up = pct >= 0
     Box(
         modifier = GlanceModifier
-            .background(c.copy(alpha = 0.20f))
-            .cornerRadius(10.dp)
-            .padding(horizontal = 7.dp, vertical = 2.dp)
+            .background(ImageProvider(if (up) R.drawable.pill_up else R.drawable.pill_down), colorFilter = null)
+            .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {
         Text(
             changeText(pct),
             maxLines = 1,
-            style = TextStyle(color = ColorProvider(c), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            style = TextStyle(color = ColorProvider(if (up) WGreen else WRed), fontWeight = FontWeight.Bold, fontSize = 12.sp)
         )
     }
 }
@@ -291,11 +345,14 @@ private fun changeText(pct: Double): String =
 @Composable
 private fun Spark(values: List<Double>, color: Color, width: Dp, height: Dp) {
     val density = LocalContext.current.resources.displayMetrics.density
-    // Tope de tamaño: los widgets viajan por un canal con poco lugar para imágenes.
-    val w = (width.value * density).toInt().coerceIn(24, 420)
-    val h = (height.value * density).toInt().coerceIn(12, 130)
+    // Tope de píxeles: los widgets viajan por un canal con poco lugar para imágenes. Si el gráfico
+    // es grande se dibuja a menor resolución, pero siempre con la misma proporción y grosor de línea.
+    val full = width.value * density * height.value * density
+    val scale = if (full > SPARK_MAX_PIXELS) sqrt(SPARK_MAX_PIXELS / full) else 1f
+    val w = (width.value * density * scale).toInt().coerceAtLeast(24)
+    val h = (height.value * density * scale).toInt().coerceAtLeast(12)
     Image(
-        provider = ImageProvider(sparkBitmap(values, color.toArgb(), w, h, density)),
+        provider = ImageProvider(sparkBitmap(values, color.toArgb(), w, h, density * scale)),
         contentDescription = null,
         modifier = GlanceModifier.width(width).height(height),
         contentScale = ContentScale.FillBounds

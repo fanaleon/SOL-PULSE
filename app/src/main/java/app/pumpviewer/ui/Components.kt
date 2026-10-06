@@ -93,8 +93,9 @@ fun chipColors(): SelectableChipColors = FilterChipDefaults.filterChipColors(
 fun primaryButtonColors(): ButtonColors = ButtonDefaults.buttonColors(
     containerColor = PurpleDeep,
     contentColor = Color.White,
-    disabledContainerColor = Surface2,
-    disabledContentColor = TextFaint
+    // Apagado pero legible: se tiene que poder leer qué hace el botón aunque todavía no se pueda tocar.
+    disabledContainerColor = Color(0xFF39437A),
+    disabledContentColor = TextDim
 )
 
 @Composable

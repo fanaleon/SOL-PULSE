@@ -72,6 +72,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -108,10 +109,17 @@ fun HomeScreen(vm: MainViewModel, onOpen: (String) -> Unit) {
                     item(key = "summary") {
                         Summary(tokens = tokens, activeAlerts = alerts.count { it.enabled })
                     }
+                    // Con pocos tokens sobra pantalla: el gráfico de cada tarjeta crece para aprovecharla.
+                    val chartHeight = when (tokens.size) {
+                        1 -> 132.dp
+                        2 -> 88.dp
+                        else -> 58.dp
+                    }
                     items(tokens, key = { it.mint }) { token ->
                         TokenCard(
                             token = token,
                             alertCount = alerts.count { it.mint == token.mint && it.enabled },
+                            chartHeight = chartHeight,
                             onClick = { onOpen(token.mint) },
                             modifier = Modifier.animateItemPlacement()
                         )
@@ -335,6 +343,7 @@ private fun EmptyState() {
 private fun TokenCard(
     token: Token,
     alertCount: Int,
+    chartHeight: Dp,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -396,7 +405,7 @@ private fun TokenCard(
         }
 
         Spacer(Modifier.height(12.dp))
-        Sparkline(token.history, accent, Modifier.fillMaxWidth().height(58.dp))
+        Sparkline(token.history, accent, Modifier.fillMaxWidth().height(chartHeight))
         Spacer(Modifier.height(10.dp))
 
         Row(verticalAlignment = Alignment.CenterVertically) {
