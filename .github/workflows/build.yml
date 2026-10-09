@@ -40,20 +40,26 @@ jobs:
             echo "::error title=Motivo del fallo::$(grep -A 12 'What went wrong' build.log | sed 's/%/%25/g' | awk '{printf "%s%%0A", $0}')"
           fi
 
-      - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk PumpViewer.apk
+      - name: Rename APKs
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk PumpViewer.apk
+          cp tv/build/outputs/apk/debug/tv-debug.apk PumpViewerTV.apk
 
       - uses: actions/upload-artifact@v4
         with:
           name: PumpViewer-apk
-          path: PumpViewer.apk
+          path: |
+            PumpViewer.apk
+            PumpViewerTV.apk
 
       - name: Publish APK in a Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: Pump Viewer build ${{ github.run_number }}
-          files: PumpViewer.apk
+          files: |
+            PumpViewer.apk
+            PumpViewerTV.apk
 
       # Capturas de control: dibuja las pantallas y el widget sin teléfono, para revisar cómo quedan.
       # Si esto falla el APK ya está publicado igual.

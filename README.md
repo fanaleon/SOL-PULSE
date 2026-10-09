@@ -14,7 +14,7 @@ App Android nativa (Kotlin + Jetpack Compose) para seguir tokens de Solana.
 
 1. Subí los cambios a la rama `main` (o lanzá el workflow a mano con *Run workflow*).
 2. En la pestaña **Actions** corre "Build APK".
-3. El APK queda en **Releases** (`Pump Viewer build N`, archivo `PumpViewer.apk`).
+3. Los APK quedan en **Releases** (`Pump Viewer build N`): `PumpViewer.apk` para el celu y `PumpViewerTV.apk` para la TV.
 4. Bajalo al celu e instalalo (permití "instalar apps desconocidas").
 
 Todas las builds se firman con la misma clave de prueba (`app/debug.keystore`), así que cada APK
@@ -30,6 +30,31 @@ Si el build falla, los errores del compilador aparecen arriba de todo en la corr
 Pump Viewer es una app distinta para Android (`app.pumpviewer` en vez de `app.solpulse`): se instala
 al lado de la anterior y no hereda sus tokens ni sus alertas. Desinstalá SolPulse, instalá Pump Viewer
 y volvé a cargar los tokens.
+
+## Pump Viewer TV (Android TV)
+
+Módulo `tv/`: la misma app pensada para la tele y el control remoto (`app.pumpviewer.tv`, se instala
+al lado de la del celu y no comparten datos).
+
+- Tablero con una tarjeta por token (precio grande, variación, mini gráfico, 5 min / 1 h / market cap) y reloj.
+- Se maneja con las flechas y OK; lo enfocado se agranda y se marca con borde cian. Atrás vuelve.
+- Detalle con gráfico grande, liquidez, volumen y alertas (atajos ±5% / ±10%). Cuando una alerta
+  se cumple, aparece un aviso amarillo arriba de todo.
+- Mantiene la pantalla encendida y baja los precios cada 20 s mientras está abierta.
+- **Barra de abajo**: clima (temperatura, estado, máx/mín y viento, de Open-Meteo) y precio de SOL con su
+  variación de 24 h (de DexScreener). Con el control se baja hasta el clima y OK abre la pantalla para
+  elegir la ciudad (por defecto Añelo). El clima se actualiza cada 10 min y SOL cada 20 s.
+- **Idioma**: inglés y español. El botón "Idioma · …" del tablero alterna Auto → English → Español.
+  "Auto" sigue el idioma de la TV (español si la TV está en español, inglés en cualquier otro caso).
+  El formulario web que se abre en el celu también sale en el idioma elegido.
+  Los textos están en `tv/src/main/res/values/strings.xml` (inglés) y `values-es/strings.xml` (español);
+  para sumar otro idioma alcanza con crear otro `values-xx/strings.xml`.
+- **Agregar tokens sin escribir con el control**: en "Agregar token" la TV muestra una dirección
+  `http://IP:8080`; abrila en el navegador del celu (mismo Wi‑Fi), pegá los mints y tocá "Enviar a la TV".
+  El servidor solo corre mientras esa pantalla está abierta. También se puede escribir el mint a mano.
+
+Instalarla en la TV: pasá `PumpViewerTV.apk` con la app *Downloader* (pegando la URL del release),
+con "Send Files to TV" o por `adb install PumpViewerTV.apk`.
 
 ## El widget
 
@@ -54,7 +79,9 @@ Nota: muchos relojes solo reciben las notificaciones cuando la pantalla del celu
 
 ## Cómo funciona
 
-- `data/` — modelos, repositorio persistente, cliente DexScreener y chequeo de alertas.
+- `core/` — módulo compartido con el celu y la TV: modelos, repositorio persistente, cliente DexScreener y formato de números.
+- `tv/` — Pump Viewer TV (ver arriba).
+- `app/data/` — chequeo de alertas del celu.
 - `service/` — servicio en primer plano, worker de respaldo, notificaciones.
 - `widget/` — widget de pantalla de inicio (Glance), que elige el diseño según su tamaño.
 - `ui/` — pantallas Compose (lista, detalle, agregar token, ajustes). La paleta está en `Theme.kt`.
