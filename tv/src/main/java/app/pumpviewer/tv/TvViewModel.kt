@@ -41,6 +41,24 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
     private val _addState = MutableStateFlow<AddState>(AddState.Idle)
     val addState: StateFlow<AddState> = _addState.asStateFlow()
 
+    private val _sol = MutableStateFlow<Token?>(null)
+    /** Precio de SOL (para la barra de abajo). */
+    val sol: StateFlow<Token?> = _sol.asStateFlow()
+
+    private val _place = MutableStateFlow(PlaceStore.load(app))
+    val place: StateFlow<Place> = _place.asStateFlow()
+
+    private val _weather = MutableStateFlow<WeatherInfo?>(null)
+    val weather: StateFlow<WeatherInfo?> = _weather.asStateFlow()
+
+    private val _placeResults = MutableStateFlow<List<Place>>(emptyList())
+    val placeResults: StateFlow<List<Place>> = _placeResults.asStateFlow()
+
+    private val _placeMessage = MutableStateFlow<String?>(null)
+    val placeMessage: StateFlow<String?> = _placeMessage.asStateFlow()
+
+    private var lastWeatherAt = 0L
+
     private val mintRegex = Regex("[1-9A-HJ-NP-Za-km-z]{32,44}")
 
     /** Texto en el idioma elegido (los mensajes se arman acá, fuera de la pantalla). */
@@ -51,6 +69,8 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
     suspend fun pollLoop() {
         while (true) {
             refreshOnce()
+            refreshSol()
+            if (System.currentTimeMillis() - lastWeatherAt > WEATHER_MS) refreshWeather()
             delay(POLL_MS)
         }
     }
@@ -72,6 +92,28 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
             throw e
         } catch (e: Exception) {
             _offline.value = true
+        }
+    }
+
+    private suspend fun refreshSol() {
+        try {
+            val quote = DexApi.fetch(listOf(SOL_MINT))[SOL_MINT]
+            if (quote != null && quote.priceUsd > 0.0) _sol.value = quote
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // la barra de abajo es opcional: se queda con el último valor
+        }
+    }
+
+    private suspend fun refreshWeather() {
+        try {
+            _weather.value = WeatherApi.current(_place.value)
+            lastWeatherAt = System.currentTimeMillis()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // se reintenta en el próximo ciclo
         }
     }
 
@@ -173,6 +215,36 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // ---------- Ciudad del clima ----------
+
+    fun searchPlace(query: String) {
+        if (query.isBlank()) return
+        _placeMessage.value = null
+        viewModelScope.launch {
+            try {
+                val found = WeatherApi.search(query, Lang.language(getApplication<Application>()))
+                _placeResults.value = found
+                _placeMessage.value = if (found.isEmpty()) str(R.string.place_not_found) else null
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _placeMessage.value = str(R.string.err_connection)
+            }
+        }
+    }
+
+    fun clearPlaceSearch() {
+        _placeResults.value = emptyList()
+        _placeMessage.value = null
+    }
+
+    fun setPlace(place: Place) {
+        PlaceStore.save(getApplication<Application>(), place)
+        _place.value = place
+        _weather.value = null
+        viewModelScope.launch { refreshWeather() }
+    }
+
     // ---------- Token y alertas ----------
 
     fun removeToken(mint: String) = Repo.removeToken(mint)
@@ -189,6 +261,8 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
 
     private companion object {
         const val POLL_MS = 20_000L
+        const val WEATHER_MS = 10 * 60_000L
+        const val SOL_MINT = "So11111111111111111111111111111111111111112"
         const val BANNER_MS = 30_000L
     }
 }

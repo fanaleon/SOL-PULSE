@@ -30,6 +30,12 @@ object Lang {
         else -> AUTO
     }
 
+    /** Idioma que se está usando de verdad: "es" o "en" (Auto sigue a la TV). */
+    fun language(context: Context): String {
+        val tag = wrap(context).resources.configuration.locales[0].language
+        return if (tag == ES) ES else EN
+    }
+
     /** Contexto con el idioma elegido; si es "auto" devuelve el mismo contexto. */
     fun wrap(base: Context): Context {
         val lang = get(base)

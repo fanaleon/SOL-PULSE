@@ -41,6 +41,9 @@ al lado de la del celu y no comparten datos).
 - Detalle con gráfico grande, liquidez, volumen y alertas (atajos ±5% / ±10%). Cuando una alerta
   se cumple, aparece un aviso amarillo arriba de todo.
 - Mantiene la pantalla encendida y baja los precios cada 20 s mientras está abierta.
+- **Barra de abajo**: clima (temperatura, estado, máx/mín y viento, de Open-Meteo) y precio de SOL con su
+  variación de 24 h (de DexScreener). Con el control se baja hasta el clima y OK abre la pantalla para
+  elegir la ciudad (por defecto Añelo). El clima se actualiza cada 10 min y SOL cada 20 s.
 - **Idioma**: inglés y español. El botón "Idioma · …" del tablero alterna Auto → English → Español.
   "Auto" sigue el idioma de la TV (español si la TV está en español, inglés en cualquier otro caso).
   El formulario web que se abre en el celu también sale en el idioma elegido.

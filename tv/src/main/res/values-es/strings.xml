@@ -64,4 +64,20 @@
     <string name="web_button">Enviar a la TV</string>
     <string name="web_ok">Listo, se los mandé a la TV. Mirá la pantalla.</string>
     <string name="web_empty">No llegó ninguna dirección. Probá de nuevo.</string>
+
+    <!-- Barra de abajo: clima y SOL -->
+    <string name="weather_loading">Cargando clima…</string>
+    <string name="wind_kmh">Viento %1$d km/h</string>
+    <string name="sky_clear">Despejado</string>
+    <string name="sky_partly">Parcialmente nublado</string>
+    <string name="sky_cloudy">Nublado</string>
+    <string name="sky_fog">Niebla</string>
+    <string name="sky_drizzle">Llovizna</string>
+    <string name="sky_rain">Lluvia</string>
+    <string name="sky_snow">Nieve</string>
+    <string name="sky_storm">Tormenta</string>
+    <string name="place_title">Ubicación del clima</string>
+    <string name="place_current">Mostrando ahora: %1$s</string>
+    <string name="place_label">Ciudad</string>
+    <string name="place_not_found">No encontré ninguna ciudad con ese nombre.</string>
 </resources>

@@ -51,6 +51,7 @@ import java.util.Locale
 sealed interface Screen {
     data object Dashboard : Screen
     data object Add : Screen
+    data object Location : Screen
     data class Detail(val mint: String) : Screen
 }
 
@@ -68,10 +69,12 @@ fun TvRoot(vm: TvViewModel, language: String, onCycleLanguage: () -> Unit) {
                 vm = vm,
                 onOpen = { screen = Screen.Detail(it) },
                 onAdd = { screen = Screen.Add },
+                onOpenLocation = { screen = Screen.Location },
                 language = language,
                 onCycleLanguage = onCycleLanguage
             )
             Screen.Add -> AddScreen(vm = vm, onBack = { screen = Screen.Dashboard })
+            Screen.Location -> LocationScreen(vm = vm, onBack = { screen = Screen.Dashboard })
             is Screen.Detail -> DetailScreen(vm = vm, mint = s.mint, onBack = { screen = Screen.Dashboard })
         }
         banner?.let { BannerPill(it, Modifier.align(Alignment.TopCenter)) }
@@ -102,12 +105,16 @@ fun DashboardScreen(
     vm: TvViewModel,
     onOpen: (String) -> Unit,
     onAdd: () -> Unit,
+    onOpenLocation: () -> Unit,
     language: String,
     onCycleLanguage: () -> Unit
 ) {
     val tokens by vm.tokens.collectAsStateWithLifecycle()
     val offline by vm.offline.collectAsStateWithLifecycle()
     val lastOk by vm.lastOk.collectAsStateWithLifecycle()
+    val sol by vm.sol.collectAsStateWithLifecycle()
+    val weather by vm.weather.collectAsStateWithLifecycle()
+    val place by vm.place.collectAsStateWithLifecycle()
     val now by produceState(System.currentTimeMillis()) {
         while (true) {
             value = System.currentTimeMillis()
@@ -179,8 +186,8 @@ fun DashboardScreen(
         if (tokens.isEmpty()) {
             Column(
                 Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 80.dp),
+                    .weight(1f)
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -194,7 +201,9 @@ fun DashboardScreen(
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(400.dp),
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 28.dp),
                 horizontalArrangement = Arrangement.spacedBy(26.dp),
                 verticalArrangement = Arrangement.spacedBy(26.dp)
@@ -208,6 +217,9 @@ fun DashboardScreen(
                 }
             }
         }
+
+        Spacer(Modifier.height(8.dp))
+        Dock(sol = sol, weather = weather, place = place, onWeatherClick = onOpenLocation)
     }
 }
 

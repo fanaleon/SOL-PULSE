@@ -70,4 +70,20 @@
     <string name="web_button">Send to TV</string>
     <string name="web_ok">Done, sent to the TV. Check the screen.</string>
     <string name="web_empty">No address received. Try again.</string>
+
+    <!-- Dock: weather and SOL -->
+    <string name="weather_loading">Loading weather…</string>
+    <string name="wind_kmh">Wind %1$d km/h</string>
+    <string name="sky_clear">Clear</string>
+    <string name="sky_partly">Partly cloudy</string>
+    <string name="sky_cloudy">Cloudy</string>
+    <string name="sky_fog">Fog</string>
+    <string name="sky_drizzle">Drizzle</string>
+    <string name="sky_rain">Rain</string>
+    <string name="sky_snow">Snow</string>
+    <string name="sky_storm">Thunderstorm</string>
+    <string name="place_title">Weather location</string>
+    <string name="place_current">Showing now: %1$s</string>
+    <string name="place_label">City</string>
+    <string name="place_not_found">No city found with that name.</string>
 </resources>
