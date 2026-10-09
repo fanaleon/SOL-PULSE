@@ -13,4 +13,6 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "PumpViewer"
+include(":core")
 include(":app")
+include(":tv")
