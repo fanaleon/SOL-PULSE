@@ -10,12 +10,22 @@ import java.net.Socket
 import java.net.URLDecoder
 import kotlin.concurrent.thread
 
+/** Textos del formulario web que se abre en el celu (ya en el idioma elegido). */
+data class WebText(
+    val lang: String,
+    val intro: String,
+    val placeholder: String,
+    val button: String,
+    val ok: String,
+    val empty: String
+)
+
 /**
  * Mini servidor web para cargar tokens sin escribir con el control remoto:
  * mientras la pantalla "Agregar" está abierta, el celu entra a http://IP-DE-LA-TV:8080,
  * pega los mints y los manda. Solo escucha en la red local y solo mientras esa pantalla está abierta.
  */
-class LocalServer(private val onMints: (String) -> Unit) {
+class LocalServer(private val text: WebText, private val onMints: (String) -> Unit) {
     @Volatile
     private var running = false
     private var server: ServerSocket? = null
@@ -91,9 +101,9 @@ class LocalServer(private val onMints: (String) -> Unit) {
                 .orEmpty()
             if (mints.isNotBlank()) {
                 onMints(mints)
-                message = "Listo, se los mandé a la TV. Mirá la pantalla."
+                message = text.ok
             } else {
-                message = "No llegó ninguna dirección. Probá de nuevo."
+                message = text.empty
             }
         }
 
@@ -114,7 +124,7 @@ class LocalServer(private val onMints: (String) -> Unit) {
 
     private fun page(message: String?): String = """
         <!doctype html>
-        <html lang="es"><head><meta charset="utf-8">
+        <html lang="${text.lang}"><head><meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <title>Pump Viewer TV</title>
         <style>
@@ -128,11 +138,11 @@ class LocalServer(private val onMints: (String) -> Unit) {
         .ok{background:#12372b;color:#2df0a6;padding:12px;border-radius:12px;margin-bottom:16px}
         </style></head><body>
         <h1>Pump Viewer TV</h1>
-        <p>Pegá una o varias direcciones de token (mint de Solana), una por línea.</p>
+        <p>${text.intro}</p>
         ${if (message != null) "<div class=\"ok\">$message</div>" else ""}
         <form method="post" action="/">
-        <textarea name="mints" placeholder="Dirección del token..."></textarea>
-        <button type="submit">Enviar a la TV</button>
+        <textarea name="mints" placeholder="${text.placeholder}"></textarea>
+        <button type="submit">${text.button}</button>
         </form></body></html>
     """.trimIndent()
 

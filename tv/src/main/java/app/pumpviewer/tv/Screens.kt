@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,7 +55,7 @@ sealed interface Screen {
 }
 
 @Composable
-fun TvRoot(vm: TvViewModel) {
+fun TvRoot(vm: TvViewModel, language: String, onCycleLanguage: () -> Unit) {
     var screen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
     val banner by vm.banner.collectAsStateWithLifecycle()
 
@@ -66,7 +67,9 @@ fun TvRoot(vm: TvViewModel) {
             Screen.Dashboard -> DashboardScreen(
                 vm = vm,
                 onOpen = { screen = Screen.Detail(it) },
-                onAdd = { screen = Screen.Add }
+                onAdd = { screen = Screen.Add },
+                language = language,
+                onCycleLanguage = onCycleLanguage
             )
             Screen.Add -> AddScreen(vm = vm, onBack = { screen = Screen.Dashboard })
             is Screen.Detail -> DetailScreen(vm = vm, mint = s.mint, onBack = { screen = Screen.Dashboard })
@@ -95,7 +98,13 @@ private val OnAmber = Color(0xFF2B1D00)
 // ---------------------------------------------------------------------------------------------
 
 @Composable
-fun DashboardScreen(vm: TvViewModel, onOpen: (String) -> Unit, onAdd: () -> Unit) {
+fun DashboardScreen(
+    vm: TvViewModel,
+    onOpen: (String) -> Unit,
+    onAdd: () -> Unit,
+    language: String,
+    onCycleLanguage: () -> Unit
+) {
     val tokens by vm.tokens.collectAsStateWithLifecycle()
     val offline by vm.offline.collectAsStateWithLifecycle()
     val lastOk by vm.lastOk.collectAsStateWithLifecycle()
@@ -129,12 +138,13 @@ fun DashboardScreen(vm: TvViewModel, onOpen: (String) -> Unit, onAdd: () -> Unit
             Column(Modifier.weight(1f)) {
                 Text("Pump Viewer TV", style = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.ExtraBold))
                 val status = when {
-                    offline -> "Sin conexión, reintentando…"
-                    tokens.isEmpty() -> "Sin tokens todavía"
-                    lastOk == 0L -> "Cargando precios…"
+                    offline -> stringResource(R.string.status_offline)
+                    tokens.isEmpty() -> stringResource(R.string.status_no_tokens)
+                    lastOk == 0L -> stringResource(R.string.status_loading)
                     else -> {
                         val secs = ((now - lastOk) / 1000).coerceAtLeast(0)
-                        if (secs < 60) "Actualizado hace ${secs}s" else "Actualizado hace ${secs / 60} min"
+                        if (secs < 60) stringResource(R.string.status_updated_secs, secs)
+                        else stringResource(R.string.status_updated_min, secs / 60)
                     }
                 }
                 Text(
@@ -146,9 +156,19 @@ fun DashboardScreen(vm: TvViewModel, onOpen: (String) -> Unit, onAdd: () -> Unit
                 clock.format(Date(now)),
                 style = tnum(40.sp, FontWeight.Light, TextDim)
             )
-            Spacer(Modifier.width(32.dp))
+            Spacer(Modifier.width(24.dp))
+            val langName = when (language) {
+                Lang.EN -> stringResource(R.string.lang_en)
+                Lang.ES -> stringResource(R.string.lang_es)
+                else -> stringResource(R.string.lang_auto)
+            }
             TvButton(
-                text = "+  Agregar token",
+                text = stringResource(R.string.language_button, langName),
+                onClick = onCycleLanguage
+            )
+            Spacer(Modifier.width(16.dp))
+            TvButton(
+                text = stringResource(R.string.add_token_button),
                 modifier = Modifier.focusRequester(addButton),
                 container = PurpleDeep,
                 textColor = Color.White,
@@ -164,10 +184,10 @@ fun DashboardScreen(vm: TvViewModel, onOpen: (String) -> Unit, onAdd: () -> Unit
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Todavía no seguís ningún token", style = TextStyle(fontSize = 34.sp, fontWeight = FontWeight.Bold))
+                Text(stringResource(R.string.empty_title), style = TextStyle(fontSize = 34.sp, fontWeight = FontWeight.Bold))
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    "Apretá “Agregar token”: podés mandar las direcciones desde el celu, sin escribir con el control.",
+                    stringResource(R.string.empty_hint),
                     style = TextStyle(fontSize = 20.sp, color = TextDim)
                 )
             }
@@ -227,7 +247,7 @@ private fun TokenCard(token: Token, modifier: Modifier, onClick: () -> Unit) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("5m ${Fmt.pct(token.change5m)}", style = tnum(17.sp, FontWeight.Medium, changeColor(token.change5m)))
             Text("1h ${Fmt.pct(token.change1h)}", style = tnum(17.sp, FontWeight.Medium, changeColor(token.change1h)))
-            Text("MC ${Fmt.compact(token.marketCap)}", style = tnum(17.sp, FontWeight.Medium, TextDim))
+            Text("${stringResource(R.string.mcap_short)} ${Fmt.compact(token.marketCap)}", style = tnum(17.sp, FontWeight.Medium, TextDim))
         }
     }
 }
@@ -242,10 +262,18 @@ fun AddScreen(vm: TvViewModel, onBack: () -> Unit) {
     var text by remember { mutableStateOf("") }
     val ip = remember { LocalServer.localIp() }
     val firstFocus = remember { FocusRequester() }
+    val webText = WebText(
+        lang = stringResource(R.string.web_lang),
+        intro = stringResource(R.string.web_intro),
+        placeholder = stringResource(R.string.web_placeholder),
+        button = stringResource(R.string.web_button),
+        ok = stringResource(R.string.web_ok),
+        empty = stringResource(R.string.web_empty)
+    )
 
     // El servidor para cargar desde el celu vive solo mientras esta pantalla está abierta.
     DisposableEffect(Unit) {
-        val server = LocalServer { vm.importFromText(it) }
+        val server = LocalServer(webText) { vm.importFromText(it) }
         server.start()
         vm.resetAdd()
         onDispose {
@@ -264,9 +292,9 @@ fun AddScreen(vm: TvViewModel, onBack: () -> Unit) {
             .padding(horizontal = 56.dp, vertical = 32.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp)) {
-            TvButton("←  Volver", modifier = Modifier.focusRequester(firstFocus), onClick = onBack)
+            TvButton(stringResource(R.string.back_button), modifier = Modifier.focusRequester(firstFocus), onClick = onBack)
             Spacer(Modifier.width(28.dp))
-            Text("Agregar token", style = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.ExtraBold))
+            Text(stringResource(R.string.add_title), style = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.ExtraBold))
         }
         Spacer(Modifier.height(30.dp))
 
@@ -284,20 +312,20 @@ fun AddScreen(vm: TvViewModel, onBack: () -> Unit) {
                     .background(Surface1)
                     .padding(28.dp)
             ) {
-                Text("Desde el celu (lo más fácil)", style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold))
+                Text(stringResource(R.string.phone_title), style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold))
                 Spacer(Modifier.height(14.dp))
                 Text(
-                    "1. Conectá el celu al mismo Wi‑Fi que la TV.\n2. Abrí en el navegador del celu:",
+                    stringResource(R.string.phone_steps_1_2),
                     style = TextStyle(fontSize = 20.sp, color = TextDim, lineHeight = 30.sp)
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    if (ip != null) "http://$ip:${LocalServer.PORT}" else "No encuentro la red de la TV",
+                    if (ip != null) "http://$ip:${LocalServer.PORT}" else stringResource(R.string.phone_no_network),
                     style = TextStyle(fontSize = 38.sp, fontWeight = FontWeight.ExtraBold, color = Cyan)
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    "3. Pegá las direcciones de los tokens y tocá “Enviar a la TV”.",
+                    stringResource(R.string.phone_step_3),
                     style = TextStyle(fontSize = 20.sp, color = TextDim, lineHeight = 30.sp)
                 )
             }
@@ -310,7 +338,7 @@ fun AddScreen(vm: TvViewModel, onBack: () -> Unit) {
                     .background(Surface1)
                     .padding(28.dp)
             ) {
-                Text("O escribila acá", style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold))
+                Text(stringResource(R.string.manual_title), style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Bold))
                 Spacer(Modifier.height(14.dp))
                 OutlinedTextField(
                     value = text,
@@ -320,7 +348,7 @@ fun AddScreen(vm: TvViewModel, onBack: () -> Unit) {
                     },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    label = { Text("Dirección del token (mint)") },
+                    label = { Text(stringResource(R.string.mint_label)) },
                     textStyle = TextStyle(fontSize = 20.sp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = TextMain,
@@ -333,12 +361,12 @@ fun AddScreen(vm: TvViewModel, onBack: () -> Unit) {
                     )
                 )
                 Spacer(Modifier.height(14.dp))
-                TvButton("Buscar", onClick = { vm.lookup(text) })
+                TvButton(stringResource(R.string.search_button), onClick = { vm.lookup(text) })
                 Spacer(Modifier.height(18.dp))
 
                 when (val s = state) {
                     AddState.Idle -> Unit
-                    AddState.Loading -> Text("Buscando…", style = TextStyle(fontSize = 20.sp, color = TextDim))
+                    AddState.Loading -> Text(stringResource(R.string.searching), style = TextStyle(fontSize = 20.sp, color = TextDim))
                     is AddState.Error -> Text(s.message, style = TextStyle(fontSize = 20.sp, color = Red))
                     is AddState.Found -> {
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -352,7 +380,7 @@ fun AddScreen(vm: TvViewModel, onBack: () -> Unit) {
                         }
                         Spacer(Modifier.height(14.dp))
                         TvButton(
-                            "Seguir este token",
+                            stringResource(R.string.follow_button),
                             container = PurpleDeep,
                             textColor = Color.White,
                             onClick = {

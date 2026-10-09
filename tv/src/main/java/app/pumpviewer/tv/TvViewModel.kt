@@ -1,6 +1,7 @@
 package app.pumpviewer.tv
 
 import android.app.Application
+import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.pumpviewer.data.AlertType
@@ -42,6 +43,10 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
 
     private val mintRegex = Regex("[1-9A-HJ-NP-Za-km-z]{32,44}")
 
+    /** Texto en el idioma elegido (los mensajes se arman acá, fuera de la pantalla). */
+    private fun str(@StringRes id: Int, vararg args: Any): String =
+        Lang.wrap(getApplication<Application>()).getString(id, *args)
+
     /** Se ejecuta mientras la app está a la vista: baja los precios cada tanto. Se cancela sola al salir. */
     suspend fun pollLoop() {
         while (true) {
@@ -82,8 +87,8 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
             }
             if (hit) {
                 Repo.setAlertEnabled(alert.id, false) // una sola vez; se rearma desde el detalle
-                val verb = if (alert.type == AlertType.ABOVE) "subió a" else "bajó a"
-                showBanner("${token.symbol} $verb ${Fmt.price(p)}  (alerta en ${Fmt.price(alert.target)})")
+                val res = if (alert.type == AlertType.ABOVE) R.string.banner_alert_above else R.string.banner_alert_below
+                showBanner(str(res, token.symbol, Fmt.price(p), Fmt.price(alert.target)))
             }
         }
     }
@@ -105,11 +110,11 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
     fun lookup(raw: String) {
         val mint = raw.trim()
         if (!mintRegex.matches(mint)) {
-            _addState.value = AddState.Error("Esa dirección no parece un mint de Solana válido.")
+            _addState.value = AddState.Error(str(R.string.err_invalid_mint))
             return
         }
         if (Repo.tokens.value.any { it.mint == mint }) {
-            _addState.value = AddState.Error("Ya estás siguiendo este token.")
+            _addState.value = AddState.Error(str(R.string.err_already_following))
             return
         }
         _addState.value = AddState.Loading
@@ -117,14 +122,14 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
             _addState.value = try {
                 val token = DexApi.fetch(listOf(mint))[mint]
                 if (token == null) {
-                    AddState.Error("No encontré pares de trading para ese token en DexScreener.")
+                    AddState.Error(str(R.string.err_not_found))
                 } else {
                     AddState.Found(token)
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                AddState.Error("No pude conectar. Revisá la conexión de la TV.")
+                AddState.Error(str(R.string.err_connection))
             }
         }
     }
@@ -134,7 +139,7 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
         if (s is AddState.Found) {
             Repo.addToken(s.token)
             _addState.value = AddState.Idle
-            showBanner("Ahora seguís ${s.token.symbol}")
+            showBanner(str(R.string.banner_following, s.token.symbol))
         }
     }
 
@@ -144,7 +149,7 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
             .filter { m -> Repo.tokens.value.none { it.mint == m } }
             .toList()
         if (mints.isEmpty()) {
-            showBanner("No encontré direcciones nuevas para agregar")
+            showBanner(str(R.string.banner_no_new))
             return
         }
         viewModelScope.launch {
@@ -157,13 +162,13 @@ class TvViewModel(app: Application) : AndroidViewModel(app) {
                     added++
                 }
                 showBanner(
-                    if (added > 0) "Se agregaron $added token(s) desde el celu"
-                    else "No encontré pares de trading para esas direcciones"
+                    if (added > 0) str(R.string.banner_imported, added)
+                    else str(R.string.banner_import_not_found)
                 )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                showBanner("No pude conectar para buscar los tokens")
+                showBanner(str(R.string.banner_import_connection))
             }
         }
     }

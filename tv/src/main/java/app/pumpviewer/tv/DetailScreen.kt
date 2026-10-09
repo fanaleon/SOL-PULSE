@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -94,15 +95,15 @@ fun DetailScreen(vm: TvViewModel, mint: String, onBack: () -> Unit) {
             Sparkline(token.history, tint, Modifier.fillMaxWidth().height(200.dp), strokeWidth = 4.dp)
             Spacer(Modifier.height(20.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Stat("5 min", Fmt.pct(token.change5m), changeColor(token.change5m), Modifier.weight(1f))
-                Stat("1 hora", Fmt.pct(token.change1h), changeColor(token.change1h), Modifier.weight(1f))
-                Stat("24 horas", Fmt.pct(token.change24h), changeColor(token.change24h), Modifier.weight(1f))
+                Stat(stringResource(R.string.stat_5min), Fmt.pct(token.change5m), changeColor(token.change5m), Modifier.weight(1f))
+                Stat(stringResource(R.string.stat_1h), Fmt.pct(token.change1h), changeColor(token.change1h), Modifier.weight(1f))
+                Stat(stringResource(R.string.stat_24h), Fmt.pct(token.change24h), changeColor(token.change24h), Modifier.weight(1f))
             }
             Spacer(Modifier.height(16.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Stat("Liquidez", Fmt.compact(token.liquidityUsd), TextMain, Modifier.weight(1f))
-                Stat("Volumen 24h", Fmt.compact(token.volume24h), TextMain, Modifier.weight(1f))
-                Stat("Market cap", Fmt.compact(token.marketCap), TextMain, Modifier.weight(1f))
+                Stat(stringResource(R.string.stat_liquidity), Fmt.compact(token.liquidityUsd), TextMain, Modifier.weight(1f))
+                Stat(stringResource(R.string.stat_volume), Fmt.compact(token.volume24h), TextMain, Modifier.weight(1f))
+                Stat(stringResource(R.string.stat_market_cap), Fmt.compact(token.marketCap), TextMain, Modifier.weight(1f))
             }
         }
 
@@ -112,10 +113,10 @@ fun DetailScreen(vm: TvViewModel, mint: String, onBack: () -> Unit) {
                 .weight(1f)
                 .fillMaxHeight()
         ) {
-            Text("Alertas de precio", style = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.Bold))
+            Text(stringResource(R.string.alerts_title), style = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.Bold))
             Spacer(Modifier.height(4.dp))
             Text(
-                "Avisan en pantalla una sola vez cuando el precio llega.",
+                stringResource(R.string.alerts_subtitle),
                 style = TextStyle(fontSize = 16.sp, color = TextDim)
             )
             Spacer(Modifier.height(14.dp))
@@ -137,7 +138,7 @@ fun DetailScreen(vm: TvViewModel, mint: String, onBack: () -> Unit) {
                 if (mine.isEmpty()) {
                     item {
                         Text(
-                            "Sin alertas. Usá los botones de arriba: se crean a partir del precio de ahora.",
+                            stringResource(R.string.alerts_empty),
                             style = TextStyle(fontSize = 18.sp, color = TextDim, lineHeight = 26.sp)
                         )
                     }
@@ -153,9 +154,9 @@ fun DetailScreen(vm: TvViewModel, mint: String, onBack: () -> Unit) {
 
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                TvButton("←  Volver", onClick = onBack)
+                TvButton(stringResource(R.string.back_button), onClick = onBack)
                 TvButton(
-                    text = if (confirmDelete) "¿Seguro? OK de nuevo" else "Dejar de seguir",
+                    text = stringResource(if (confirmDelete) R.string.unfollow_confirm else R.string.unfollow),
                     container = if (confirmDelete) Red else Surface1,
                     textColor = if (confirmDelete) Color(0xFF3A0A14) else Red,
                     onClick = {
@@ -208,12 +209,12 @@ private fun AlertRow(alert: PriceAlert, onToggle: () -> Unit, onDelete: () -> Un
                 .padding(horizontal = 18.dp, vertical = 12.dp)
         ) {
             Text(
-                (if (above) "Sube a " else "Baja a ") + Fmt.price(alert.target),
+                stringResource(if (above) R.string.alert_above else R.string.alert_below, Fmt.price(alert.target)),
                 style = tnum(22.sp, FontWeight.Bold, accent),
                 maxLines = 1
             )
             Text(
-                if (alert.enabled) "Activa · OK para pausar" else "Pausada · OK para rearmar",
+                stringResource(if (alert.enabled) R.string.alert_active else R.string.alert_paused),
                 style = TextStyle(fontSize = 15.sp, color = TextDim)
             )
         }
@@ -223,7 +224,7 @@ private fun AlertRow(alert: PriceAlert, onToggle: () -> Unit, onDelete: () -> Un
                 .padding(horizontal = 16.dp, vertical = 18.dp),
             contentAlignment = Alignment.Center
         ) {
-            Text("Borrar", style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Red))
+            Text(stringResource(R.string.alert_delete), style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Red))
         }
     }
 }

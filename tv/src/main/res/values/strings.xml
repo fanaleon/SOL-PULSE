@@ -1,3 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Pump Viewer TV</string>
+    <string name="app_name" translatable="false">Pump Viewer TV</string>
+
+    <!-- Language names are shown in their own language on purpose -->
+    <string name="lang_auto" translatable="false">Auto</string>
+    <string name="lang_en" translatable="false">English</string>
+    <string name="lang_es" translatable="false">Español</string>
+    <string name="language_button">Language · %1$s</string>
+
+    <!-- Dashboard -->
+    <string name="status_offline">Offline, retrying…</string>
+    <string name="status_no_tokens">No tokens yet</string>
+    <string name="status_loading">Loading prices…</string>
+    <string name="status_updated_secs">Updated %1$ds ago</string>
+    <string name="status_updated_min">Updated %1$d min ago</string>
+    <string name="add_token_button">+  Add token</string>
+    <string name="empty_title">You\'re not following any token yet</string>
+    <string name="empty_hint">Press “Add token”: you can send the addresses from your phone, no typing with the remote.</string>
+    <string name="mcap_short">MCap</string>
+
+    <!-- Add token -->
+    <string name="add_title">Add token</string>
+    <string name="back_button">←  Back</string>
+    <string name="phone_title">From your phone (easiest)</string>
+    <string name="phone_steps_1_2">1. Connect your phone to the same Wi‑Fi as the TV.\n2. Open this in your phone\'s browser:</string>
+    <string name="phone_no_network">Can\'t find the TV\'s network</string>
+    <string name="phone_step_3">3. Paste the token addresses and tap “Send to TV”.</string>
+    <string name="manual_title">Or type it here</string>
+    <string name="mint_label">Token address (mint)</string>
+    <string name="search_button">Search</string>
+    <string name="searching">Searching…</string>
+    <string name="follow_button">Follow this token</string>
+
+    <!-- Errors and banners (ViewModel) -->
+    <string name="err_invalid_mint">That doesn\'t look like a valid Solana mint address.</string>
+    <string name="err_already_following">You\'re already following this token.</string>
+    <string name="err_not_found">I couldn\'t find trading pairs for that token on DexScreener.</string>
+    <string name="err_connection">Couldn\'t connect. Check the TV\'s internet connection.</string>
+    <string name="banner_following">Now following %1$s</string>
+    <string name="banner_imported">Added %1$d token(s) from your phone</string>
+    <string name="banner_no_new">No new addresses found to add</string>
+    <string name="banner_import_not_found">No trading pairs found for those addresses</string>
+    <string name="banner_import_connection">Couldn\'t connect to look up the tokens</string>
+    <string name="banner_alert_above">%1$s rose to %2$s  (alert at %3$s)</string>
+    <string name="banner_alert_below">%1$s fell to %2$s  (alert at %3$s)</string>
+
+    <!-- Token detail -->
+    <string name="stat_5min">5 min</string>
+    <string name="stat_1h">1 hour</string>
+    <string name="stat_24h">24 hours</string>
+    <string name="stat_liquidity">Liquidity</string>
+    <string name="stat_volume">24h volume</string>
+    <string name="stat_market_cap">Market cap</string>
+    <string name="alerts_title">Price alerts</string>
+    <string name="alerts_subtitle">They notify on screen once, when the price gets there.</string>
+    <string name="alerts_empty">No alerts. Use the buttons above: they\'re based on the current price.</string>
+    <string name="alert_above">Rises to %1$s</string>
+    <string name="alert_below">Falls to %1$s</string>
+    <string name="alert_active">Active · OK to pause</string>
+    <string name="alert_paused">Paused · OK to re-arm</string>
+    <string name="alert_delete">Delete</string>
+    <string name="unfollow">Unfollow</string>
+    <string name="unfollow_confirm">Sure? Press OK again</string>
+
+    <!-- Web form served to the phone -->
+    <string name="web_lang" translatable="false">en</string>
+    <string name="web_intro">Paste one or more token addresses (Solana mints), one per line.</string>
+    <string name="web_placeholder">Token address...</string>
+    <string name="web_button">Send to TV</string>
+    <string name="web_ok">Done, sent to the TV. Check the screen.</string>
+    <string name="web_empty">No address received. Try again.</string>
 </resources>

@@ -41,6 +41,11 @@ al lado de la del celu y no comparten datos).
 - Detalle con gráfico grande, liquidez, volumen y alertas (atajos ±5% / ±10%). Cuando una alerta
   se cumple, aparece un aviso amarillo arriba de todo.
 - Mantiene la pantalla encendida y baja los precios cada 20 s mientras está abierta.
+- **Idioma**: inglés y español. El botón "Idioma · …" del tablero alterna Auto → English → Español.
+  "Auto" sigue el idioma de la TV (español si la TV está en español, inglés en cualquier otro caso).
+  El formulario web que se abre en el celu también sale en el idioma elegido.
+  Los textos están en `tv/src/main/res/values/strings.xml` (inglés) y `values-es/strings.xml` (español);
+  para sumar otro idioma alcanza con crear otro `values-xx/strings.xml`.
 - **Agregar tokens sin escribir con el control**: en "Agregar token" la TV muestra una dirección
   `http://IP:8080`; abrila en el navegador del celu (mismo Wi‑Fi), pegá los mints y tocá "Enviar a la TV".
   El servidor solo corre mientras esa pantalla está abierta. También se puede escribir el mint a mano.

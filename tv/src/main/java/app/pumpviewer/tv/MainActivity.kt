@@ -1,5 +1,6 @@
 package app.pumpviewer.tv
 
+import android.content.Context
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -13,6 +14,11 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private val vm: TvViewModel by viewModels()
 
+    // Aplica el idioma elegido en la app (o el de la TV si está en "Auto").
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(Lang.wrap(newBase))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Es un tablero de precios: que la TV no se apague mientras está abierto.
@@ -25,7 +31,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             TvTheme {
-                TvRoot(vm)
+                TvRoot(
+                    vm = vm,
+                    language = Lang.get(this),
+                    onCycleLanguage = {
+                        Lang.set(this, Lang.next(Lang.get(this)))
+                        recreate()
+                    }
+                )
             }
         }
     }
