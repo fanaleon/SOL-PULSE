@@ -133,7 +133,7 @@ fun DetailScreen(vm: MainViewModel, mint: String, onBack: () -> Unit) {
         }
 
         Spacer(Modifier.height(16.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.entrance(0), verticalAlignment = Alignment.CenterVertically) {
             TokenLogo(token, 64.dp)
             Spacer(Modifier.width(14.dp))
             Column {
@@ -150,31 +150,35 @@ fun DetailScreen(vm: MainViewModel, mint: String, onBack: () -> Unit) {
         }
 
         Spacer(Modifier.height(18.dp))
-        FlashingPrice(token.priceUsd, TextStyle(fontSize = 44.sp, fontWeight = FontWeight.Black, letterSpacing = (-1).sp))
-        Spacer(Modifier.height(10.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            ChangeTile("5 min", token.change5m, Modifier.weight(1f))
-            ChangeTile("1 hora", token.change1h, Modifier.weight(1f))
-            ChangeTile("24 horas", token.change24h, Modifier.weight(1f))
+        Column(Modifier.entrance(90)) {
+            FlashingPrice(token.priceUsd, TextStyle(fontSize = 44.sp, fontWeight = FontWeight.Black, letterSpacing = (-1).sp))
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                ChangeTile("5 min", token.change5m, Modifier.weight(1f))
+                ChangeTile("1 hora", token.change1h, Modifier.weight(1f))
+                ChangeTile("24 horas", token.change24h, Modifier.weight(1f))
+            }
         }
 
         Spacer(Modifier.height(16.dp))
-        PriceChart(
-            values = token.history,
-            color = accent,
-            current = token.priceUsd,
-            targets = alerts.filter { it.enabled }.map { it.target }
-        )
+        Box(Modifier.entrance(180)) {
+            PriceChart(
+                values = token.history,
+                color = accent,
+                current = token.priceUsd,
+                targets = alerts.filter { it.enabled }.map { it.target }
+            )
+        }
 
         Spacer(Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.entrance(270), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             StatCard("Liquidez", Fmt.compact(token.liquidityUsd), Cyan, Modifier.weight(1f))
             StatCard("Volumen 24 h", Fmt.compact(token.volume24h), Purple, Modifier.weight(1f))
             StatCard("Market cap", Fmt.compact(token.marketCap), Amber, Modifier.weight(1f))
         }
 
         Spacer(Modifier.height(26.dp))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().entrance(360), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Notifications, contentDescription = null, tint = Amber, modifier = Modifier.size(22.dp))
             Spacer(Modifier.width(8.dp))
             Text("Alertas", color = TextMain, fontSize = 22.sp, fontWeight = FontWeight.Black, modifier = Modifier.weight(1f))
@@ -207,7 +211,7 @@ fun DetailScreen(vm: MainViewModel, mint: String, onBack: () -> Unit) {
         }
 
         Spacer(Modifier.height(24.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.entrance(450), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             OutlinedButton(
                 onClick = {
                     clipboard.setText(AnnotatedString(token.mint))

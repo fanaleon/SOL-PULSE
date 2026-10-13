@@ -9,6 +9,10 @@ App Android nativa (Kotlin + Jetpack Compose) para seguir tokens de Solana.
 - Widget en la pantalla de inicio, en lista o en una tira de una fila (4x1).
 - Notificaciones de alta prioridad que el celu espeja al reloj.
 - Servicio en segundo plano (15 s / 30 s / 1 min / 5 min) + WorkManager de respaldo cada 15 min.
+- Animaciones: las tarjetas entran escalonadas, destellan en verde o rojo cuando cambia el precio, los
+  porcentajes "corren" hasta su valor, un anillo sale del último punto del gráfico cuando llega un precio
+  nuevo, la barra de ánimo se llena y el título tiene un brillo que lo recorre. En el detalle, cada bloque
+  entra en cascada. Todo respeta el interruptor `Motion` (las capturas de control lo apagan).
 
 ## Compilar el APK con GitHub Actions
 
