@@ -73,6 +73,16 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -89,6 +99,19 @@ fun HomeScreen(vm: MainViewModel, onOpen: (String) -> Unit) {
     val refreshing by vm.refreshing.collectAsStateWithLifecycle()
     var showAdd by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
+
+    // Tarjetas que ya hicieron su entrada: al volver a scrollear no se repite.
+    val seen = remember { HashSet<String>() }
+    val fabScale = remember { Animatable(if (Motion.enabled) 0f else 1f) }
+    LaunchedEffect(Unit) {
+        if (Motion.enabled) {
+            delay(450)
+            fabScale.animateTo(
+                1f,
+                spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
+            )
+        }
+    }
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().statusBarsPadding()) {
@@ -107,7 +130,9 @@ fun HomeScreen(vm: MainViewModel, onOpen: (String) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     item(key = "summary") {
-                        Summary(tokens = tokens, activeAlerts = alerts.count { it.enabled })
+                        Box(Modifier.entrance(0, play = "summary" !in seen, onDone = { seen.add("summary") })) {
+                            Summary(tokens = tokens, activeAlerts = alerts.count { it.enabled })
+                        }
                     }
                     // Con pocos tokens sobra pantalla: el gráfico de cada tarjeta crece para aprovecharla.
                     val chartHeight = when (tokens.size) {
@@ -115,13 +140,19 @@ fun HomeScreen(vm: MainViewModel, onOpen: (String) -> Unit) {
                         2 -> 88.dp
                         else -> 58.dp
                     }
-                    items(tokens, key = { it.mint }) { token ->
+                    itemsIndexed(tokens, key = { _, t -> t.mint }) { index, token ->
                         TokenCard(
                             token = token,
                             alertCount = alerts.count { it.mint == token.mint && it.enabled },
                             chartHeight = chartHeight,
                             onClick = { onOpen(token.mint) },
-                            modifier = Modifier.animateItemPlacement()
+                            modifier = Modifier
+                                .animateItemPlacement()
+                                .entrance(
+                                    delayMs = 90 + minOf(index, 6) * 70,
+                                    play = token.mint !in seen,
+                                    onDone = { seen.add(token.mint) }
+                                )
                         )
                     }
                 }
@@ -141,6 +172,10 @@ fun HomeScreen(vm: MainViewModel, onOpen: (String) -> Unit) {
                 .align(Alignment.BottomEnd)
                 .navigationBarsPadding()
                 .padding(20.dp)
+                .graphicsLayer {
+                    scaleX = fabScale.value
+                    scaleY = fabScale.value
+                }
         )
     }
 
@@ -253,17 +288,31 @@ private fun Summary(tokens: List<Token>, activeAlerts: Int) {
         }
         if (tokens.size > 1) {
             // Barra de ánimo: la parte verde son los tokens que suben en 24 h; la roja, los que bajan.
+            // Se llena al aparecer y se desliza suave cuando cambian las proporciones.
+            val grow = remember { Animatable(if (Motion.enabled) 0f else 1f) }
+            LaunchedEffect(Unit) {
+                if (Motion.enabled) grow.animateTo(1f, tween(900, delayMillis = 250, easing = FastOutSlowInEasing))
+            }
+            val total = tokens.size.toFloat()
+            val upFrac by animateFloatAsState(up / total, tween(700), label = "up")
+            val downFrac by animateFloatAsState(down / total, tween(700), label = "down")
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Row(
+                Canvas(
                     Modifier
                         .weight(1f)
                         .height(6.dp)
                         .clip(RoundedCornerShape(50))
-                        .background(Surface2)
                 ) {
-                    if (up > 0) Box(Modifier.weight(up.toFloat()).fillMaxHeight().background(Green))
-                    if (tokens.size - up - down > 0) Box(Modifier.weight((tokens.size - up - down).toFloat()).fillMaxHeight().background(TextFaint))
-                    if (down > 0) Box(Modifier.weight(down.toFloat()).fillMaxHeight().background(Red))
+                    val w = size.width * grow.value
+                    val h = size.height
+                    drawRect(Surface2)
+                    drawRect(
+                        TextFaint,
+                        topLeft = Offset(w * upFrac, 0f),
+                        size = Size(w * (1f - upFrac - downFrac).coerceAtLeast(0f), h)
+                    )
+                    drawRect(Green, size = Size(w * upFrac, h))
+                    drawRect(Red, topLeft = Offset(w * (1f - downFrac), 0f), size = Size(w * downFrac, h))
                 }
                 Spacer(Modifier.width(10.dp))
                 Text("$up suben", color = Green, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
@@ -350,7 +399,24 @@ private fun TokenCard(
     val accent = if (token.change24h >= 0) Green else Red
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed) 0.97f else 1f, label = "press")
+    val scale by animateFloatAsState(
+        if (pressed) 0.96f else 1f,
+        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "press"
+    )
+
+    // Cuando cambia el precio, la tarjeta destella un instante: verde si subió, roja si bajó.
+    val flash = remember { Animatable(0f) }
+    var flashColor by remember { mutableStateOf(Green) }
+    var lastPrice by remember { mutableStateOf(token.priceUsd) }
+    LaunchedEffect(token.priceUsd) {
+        if (Motion.enabled && lastPrice > 0.0 && token.priceUsd != lastPrice) {
+            flashColor = if (token.priceUsd > lastPrice) Green else Red
+            flash.snapTo(1f)
+            flash.animateTo(0f, tween(1400, easing = FastOutSlowInEasing))
+        }
+        lastPrice = token.priceUsd
+    }
 
     Column(
         modifier
@@ -360,6 +426,9 @@ private fun TokenCard(
                 scaleY = scale
             }
             .tintedGlass(accent)
+            .drawBehind {
+                if (flash.value > 0f) drawRect(flashColor.copy(alpha = 0.16f * flash.value))
+            }
             .clickable(interactionSource = source, indication = null, onClick = onClick)
             .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 14.dp)
     ) {
@@ -400,7 +469,7 @@ private fun TokenCard(
             Column(horizontalAlignment = Alignment.End) {
                 FlashingPrice(token.priceUsd, TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Black))
                 Spacer(Modifier.size(5.dp))
-                ChangeChip(token.change24h, fontSize = 13)
+                ChangeChip(token.change24h, fontSize = 13, countUp = true)
             }
         }
 

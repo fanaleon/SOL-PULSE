@@ -55,6 +55,9 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.pumpviewer.data.Fmt
@@ -180,11 +183,20 @@ fun FlashingPrice(price: Double, style: TextStyle) {
     }
 }
 
-/** Pastilla de variación: flecha y porcentaje, verde o roja. */
+/**
+ * Pastilla de variación: flecha y porcentaje, verde o roja. El número corre hasta el valor nuevo
+ * cada vez que cambia (y desde cero la primera vez, si `countUp` está prendido).
+ */
 @Composable
-fun ChangeChip(pct: Double, modifier: Modifier = Modifier, fontSize: Int = 12) {
-    val up = pct > 0.005
-    val down = pct < -0.005
+fun ChangeChip(pct: Double, modifier: Modifier = Modifier, fontSize: Int = 12, countUp: Boolean = false) {
+    val shown = remember { Animatable(if (Motion.enabled && countUp) 0f else pct.toFloat()) }
+    LaunchedEffect(pct) {
+        if (Motion.enabled) shown.animateTo(pct.toFloat(), tween(700, easing = FastOutSlowInEasing))
+        else shown.snapTo(pct.toFloat())
+    }
+    val v = shown.value.toDouble()
+    val up = v > 0.005
+    val down = v < -0.005
     val c = if (up) Green else if (down) Red else TextDim
     val arrow = if (up) "▲" else if (down) "▼" else "•"
     Box(
@@ -195,7 +207,7 @@ fun ChangeChip(pct: Double, modifier: Modifier = Modifier, fontSize: Int = 12) {
             .padding(horizontal = (fontSize * 0.75f).dp, vertical = (fontSize * 0.25f).dp)
     ) {
         Text(
-            "$arrow ${Fmt.pctAbs(abs(pct))}",
+            "$arrow ${Fmt.pctAbs(abs(v))}",
             color = c,
             fontSize = fontSize.sp,
             fontWeight = FontWeight.Bold,
@@ -251,6 +263,14 @@ fun TokenLogo(token: Token, size: Dp) {
 fun Sparkline(values: List<Double>, color: Color, modifier: Modifier = Modifier, endDot: Boolean = true) {
     val reveal = remember { Animatable(if (Motion.enabled) 0f else 1f) }
     LaunchedEffect(Unit) { reveal.animateTo(1f, tween(900, easing = FastOutSlowInEasing)) }
+    // Cada vez que llega un precio nuevo, un anillo sale del punto final.
+    val ping = remember { Animatable(1f) }
+    LaunchedEffect(values.size, values.lastOrNull()) {
+        if (Motion.enabled && endDot && reveal.value > 0.97f) {
+            ping.snapTo(0f)
+            ping.animateTo(1f, tween(1000, easing = FastOutSlowInEasing))
+        }
+    }
     val pulse = if (Motion.enabled && endDot) {
         val t = rememberInfiniteTransition(label = "spark")
         val v by t.animateFloat(
@@ -302,6 +322,14 @@ fun Sparkline(values: List<Double>, color: Color, modifier: Modifier = Modifier,
         }
         if (endDot && reveal.value > 0.97f) {
             val end = Offset(right, yOf(values.last()))
+            if (ping.value < 1f) {
+                drawCircle(
+                    color.copy(alpha = 0.55f * (1f - ping.value)),
+                    radius = dot + dot * 6f * ping.value,
+                    center = end,
+                    style = Stroke(width = 1.6.dp.toPx())
+                )
+            }
             drawCircle(color.copy(alpha = 0.5f * (1f - pulse)), radius = dot + dot * 1.6f * pulse, center = end)
             drawCircle(Bg, radius = dot + 1.dp.toPx(), center = end)
             drawCircle(color, radius = dot, center = end)
@@ -309,11 +337,53 @@ fun Sparkline(values: List<Double>, color: Color, modifier: Modifier = Modifier,
     }
 }
 
-/** Degradé de marca para el título: verde, cian y violeta. */
+/**
+ * Degradé de marca para el título: verde, cian y violeta. Con las animaciones prendidas el brillo
+ * recorre el texto despacio (el degradé se repite en espejo, así que el ciclo no tiene saltos).
+ */
 @Composable
-fun gradientTitle(size: Int): TextStyle = TextStyle(
-    brush = Brush.linearGradient(listOf(Green, Cyan, Purple)),
-    fontSize = size.sp,
-    fontWeight = FontWeight.Black,
-    letterSpacing = (-0.5).sp
-)
+fun gradientTitle(size: Int): TextStyle {
+    val shift = if (Motion.enabled) {
+        val t = rememberInfiniteTransition(label = "title")
+        val v by t.animateFloat(
+            0f,
+            1f,
+            infiniteRepeatable(tween(7000, easing = LinearEasing), RepeatMode.Restart),
+            label = "shift"
+        )
+        v
+    } else {
+        0f
+    }
+    val span = with(LocalDensity.current) { (size * 6).dp.toPx() }
+    val from = shift * 2f * span
+    return TextStyle(
+        brush = Brush.linearGradient(
+            listOf(Green, Cyan, Purple),
+            start = Offset(from, 0f),
+            end = Offset(from + span, 0f),
+            tileMode = TileMode.Mirror
+        ),
+        fontSize = size.sp,
+        fontWeight = FontWeight.Black,
+        letterSpacing = (-0.5).sp
+    )
+}
+
+/**
+ * Entrada suave: el elemento sube unos píxeles mientras aparece, con una demora para poder
+ * escalonar varios. Si `play` es falso o las animaciones están apagadas, no hace nada.
+ */
+@Composable
+fun Modifier.entrance(delayMs: Int, play: Boolean = true, onDone: () -> Unit = {}): Modifier {
+    val run = Motion.enabled && play
+    val progress = remember { Animatable(if (run) 0f else 1f) }
+    LaunchedEffect(Unit) {
+        if (run) progress.animateTo(1f, tween(480, delayMillis = delayMs, easing = FastOutSlowInEasing))
+        onDone()
+    }
+    return this.graphicsLayer {
+        alpha = progress.value
+        translationY = (1f - progress.value) * 28.dp.toPx()
+    }
+}
